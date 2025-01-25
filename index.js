@@ -1,43 +1,51 @@
-// init project
-require('dotenv').config();
+
 var express = require('express');
 var app = express();
 
 // enable CORS (https://en.wikipedia.org/wiki/Cross-origin_resource_sharing)
-// so that your API is remotely testable by FCC
+// so that your API is remotely testable by FCC 
 var cors = require('cors');
-app.use(cors({ optionsSuccessStatus: 200 })); // some legacy browsers choke on 204
+app.use(cors({optionsSuccessStatus: 200}));  // some legacy browsers choke on 204
 
 // http://expressjs.com/en/starter/static-files.html
 app.use(express.static('public'));
 
 // http://expressjs.com/en/starter/basic-routing.html
-app.get('/', function (req, res) {
+app.get("/", function (req, res) {
   res.sendFile(__dirname + '/views/index.html');
 });
 
-// Your first API endpoint...
-app.get('/api/hello', function (req, res) {
-  res.json({ greeting: 'hello API' });
+
+// your first API endpoint... 
+app.get("/api/hello", function (req, res) {
+  res.json({greeting: 'hello API'});
 });
 
-// New API endpoint to return IP, language, and software info
-app.get('/api/whoami', function (req, res) {
-  const ipaddress = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
-  const cleanedIp = ipaddress.split(',')[0].replace(/^.*:/, ''); // Remove the ::ffff: prefix
+app.get("/api/:date?", (req, res) => {
+  let dateParam = req.params.date;
 
-  // Extract language and software
-  const language = req.headers['accept-language'].split(',')[0];
-  const software = req.headers['user-agent'].match(/\(([^)]+)\)/)[1];
+  if (!dateParam) {
+    const currentDate = new Date();
+    return res.json({
+      unix: currentDate.getTime(),
+      utc: currentDate.toUTCString(),
+    });
+  }
+
+  let date = !isNaN(dateParam) ? new Date(Number(dateParam)) : new Date(dateParam);
+
+  if (date.toString() === "Invalid Date") {
+    return res.json({ error: "Invalid Date" });
+  }
 
   res.json({
-    ipaddress: cleanedIp,
-    language,
-    software
+    unix: date.getTime(),
+    utc: date.toUTCString(),
   });
 });
 
-// listen for requests :)
+
+// Listen on port set in environment variable or default to 3000
 var listener = app.listen(process.env.PORT || 3000, function () {
-  console.log('Your app is listening on port ' + listener.address().port);
+  console.log(`Your app is listening on http://localhost:${listener.address().port}`);
 });
